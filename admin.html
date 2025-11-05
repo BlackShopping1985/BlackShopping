@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <title>后台-新增商品</title>
+</head>
+
+<body>
+    <h2>新增商品</h2>
+    <form action="http://localhost:3001/admin/add" method="post" enctype="multipart/form-data">
+        名称：<input type="text" name="name" required><br>
+        价格：<input type="number" name="price" required><br>
+        库存：<input type="number" name="stock" required><br>
+        图片：<input type="file" name="pics" multiple accept="image/*"><br>
+        <button type="submit">提交</button>
+    </form>
+</body>
+
+</html>
