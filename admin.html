@@ -54,6 +54,17 @@
     const list = refRes.content ? JSON.parse(atob(refRes.content)) : [];
     list.push(item);
 
+    // 这是一个辅助函数，用于正确处理包含非 ASCII 字符（如中文）的 Base64 编码
+    function base64EncodeUnicode(str) {
+        // 将字符串编码为 UTF-8 字节数组
+        const utf8Bytes = new TextEncoder().encode(str);
+        // 使用 String.fromCharCode 将字节数组转换为二进制字符串
+        const binaryString = String.fromCharCode(...utf8Bytes);
+        // 使用 btoa 进行 Base64 编码
+        return btoa(binaryString);
+    }
+
+
     /* 2-3 推送回仓库 */
     const body = {
       message:'chore: add product from admin',
@@ -71,6 +82,7 @@
   </script>
 </body>
 </html>
+
 
 
 
