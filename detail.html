@@ -57,58 +57,75 @@
     </div>
 
     <!-- ====== 数据脚本 ====== -->
-    <script src="data.js"></script>
     <script>
         // 取 URL 参数
         const params = new URLSearchParams(location.search);
-        const id = Number(params.get('id'));
+        const id = Number(params.get('id')); // 获取商品 ID
 
-        const item = raw[id];
+        // 使用 fetch 异步加载 web/data.json 文件
+        fetch('web/data.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(raw => {
+                // JSON 数据加载成功后，执行原有的渲染逻辑
+                const item = raw[id];
 
-        if (!item) {
-            document.querySelector('.detail-box').innerHTML = '<p>商品不存在</p>';
-        } else {
-            const [images, name] = item;
-            document.getElementById('d-title').textContent = name;
-            // document.getElementById('d-price').textContent = `¥${price}`;
-            // document.getElementById('d-stock').textContent = `库存 ${stock} 件`;
-        }
+                if (!item) {
+                    document.querySelector('.detail-box').innerHTML = '<p>商品不存在或ID无效</p>';
+                    return; // 提前退出
+                }
+                
+                // 解构数据：根据您之前的 raw 格式 [ [图片数组], 名称 ]
+                const [images, name] = item;
+                
+                // 更新页面信息
+                document.getElementById('d-title').textContent = name;
 
+                // --- 滑动图片逻辑 ---
+                let idx = 0;
+                const total = images.length;
+                const track = document.getElementById('track');
+                const prev = document.getElementById('prev');
+                const next = document.getElementById('next');
+                const dots = document.getElementById('dots');
 
-        const images = item[0];
+                // 1. 初始化 DOM
+                track.innerHTML = images.map(src => `<img src="${src}" alt="${name}">`).join('');
+                dots.innerHTML = images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('');
 
-        let idx = 0;
-        const total = images.length;
-        const track = document.getElementById('track');
-        const prev = document.getElementById('prev');
-        const next = document.getElementById('next');
-        const dots = document.getElementById('dots');
+                // 2. 切换函数
+                function goSlide(i) {
+                    idx = (i + total) % total;
+                    track.style.transform = `translateX(-${idx * 100}%)`;
+                    document.querySelectorAll('.dot').forEach((d, k) => d.classList.toggle('active', k === idx));
+                }
 
-        // 1. 初始化 DOM
-        track.innerHTML = images.map(src => `<img src="${src}" alt="">`).join('');
-        dots.innerHTML = images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('');
+                // 3. 事件绑定
+                prev.onclick = () => goSlide(idx - 1);
+                next.onclick = () => goSlide(idx + 1);
+                dots.onclick = e => {
+                    if (e.target.classList.contains('dot')) goSlide([...dots.children].indexOf(e.target));
+                };
 
-        // 2. 切换函数
-        function goSlide(i) {
-            idx = (i + total) % total;
-            track.style.transform = `translateX(-${idx * 100}%)`;
-            document.querySelectorAll('.dot').forEach((d, k) => d.classList.toggle('active', k === idx));
-        }
+                // 4. 键盘左右箭头
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'ArrowLeft') prev.onclick();
+                    if (e.key === 'ArrowRight') next.onclick();
+                });
 
-        // 3. 事件绑定
-        prev.onclick = () => goSlide(idx - 1);
-        next.onclick = () => goSlide(idx + 1);
-        dots.onclick = e => {
-            if (e.target.classList.contains('dot')) goSlide([...dots.children].indexOf(e.target));
-        };
-
-        // 4. 键盘左右箭头
-        document.addEventListener('keydown', e => {
-            if (e.key === 'ArrowLeft') prev.onclick();
-            if (e.key === 'ArrowRight') next.onclick();
-        });
+            })
+            .catch(error => {
+                // 处理加载失败的情况
+                console.error('Error loading the product data:', error);
+                document.querySelector('.detail-box').innerHTML = '<p>抱歉，无法加载商品数据。请稍后再试。</p>';
+            });
     </script>
 
 </body>
+
 
 </html>
