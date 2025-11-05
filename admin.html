@@ -8,6 +8,8 @@
   <h2>新增商品（纯前端版）</h2>
   <form id="form">
     名称：<input name="name" required><br>
+    价格：<input type="number" name="price" required><br>
+    库存：<input type="number" name="stock" required><br>
     图片（多图）：<input type="file" name="pics" multiple accept="image/*" required><br>
     <button type="submit">提交</button>
   </form>
@@ -31,9 +33,10 @@
     e.preventDefault();
     const f = e.target;
     const item = {
-      pics: await Promise.all([...f.pics.files].map(toBase64)),
-      name: f.name.value 
-      
+      name: f.name.value,
+      price: Number(f.price.value),
+      stock: Number(f.stock.value),
+      pics: await Promise.all([...f.pics.files].map(toBase64))
     };
 
     const token = prompt('GitHub Personal Access Token:'); // 简单做法，生产环境用加密存储
@@ -54,24 +57,13 @@
     const list = refRes.content ? JSON.parse(atob(refRes.content)) : [];
     list.push(item);
 
-    // 这是一个辅助函数，用于正确处理包含非 ASCII 字符（如中文）的 Base64 编码
-    function base64EncodeUnicode(str) {
-        // 将字符串编码为 UTF-8 字节数组
-        const utf8Bytes = new TextEncoder().encode(str);
-        // 使用 String.fromCharCode 将字节数组转换为二进制字符串
-        const binaryString = String.fromCharCode(...utf8Bytes);
-        // 使用 btoa 进行 Base64 编码
-        return btoa(binaryString);
-    }
-    
     /* 2-3 推送回仓库 */
     const body = {
-        message:'chore: add product from admin',
-        // 使用新的函数来替代 btoa()
-        content: base64EncodeUnicode(JSON.stringify(list, null, 2)), 
-        sha: refRes.sha
+      message:'chore: add product from admin',
+      content: btoa(JSON.stringify(list, null, 2)),
+      sha: refRes.sha
     };
-    const pushRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
+    const pushRes = await fetch(`https://api.github.com/repos/ ${owner}/${repo}/contents/${path}`,{
       method:'PUT',
       body: JSON.stringify(body),
       headers:{Authorization:`token ${token}`, 'Content-Type':'application/json'}
@@ -82,18 +74,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
