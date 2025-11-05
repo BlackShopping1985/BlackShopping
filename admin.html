@@ -30,11 +30,11 @@
   document.getElementById('form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target;
-    const item = {
+    const item = [
       await Promise.all([...f.pics.files].map(toBase64)),
       f.name.value    
       
-    };
+    ];
 
     const token = prompt('GitHub Personal Access Token:'); // 简单做法，生产环境用加密存储
     if(!token){ alert('需要 Token'); return; }
