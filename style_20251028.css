@@ -281,3 +281,131 @@ body {
         gap: 15px;
     }
 }
+
+
+
+/* 商品页 */
+.detail-box {
+    max-width: 800px;
+    margin: 30px auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    padding: 25px;
+    display: flex;
+    gap: 25px;
+}
+
+.detail-left img {
+    width: 100%;
+    max-width: 380px;
+    border-radius: 8px;
+}
+
+
+.detail-left .slide-box {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    overflow: hidden;
+    border-radius: 8px
+}
+
+.detail-left .slide-track {
+    display: flex;
+    transition: transform .4s ease
+}
+
+.detail-left .slide-track img {
+    min-width: 100%;
+    height: 380px;
+    object-fit: cover
+}
+
+.detail-left .slide-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, .45);
+    color: #fff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 50%;
+    opacity: 0.7;
+}
+
+.detail-left .slide-btn:hover {
+    opacity: 1;
+}
+
+.detail-left .prev {
+    left: 10px
+}
+
+.detail-left .next {
+    right: 10px
+}
+
+.detail-left .dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px
+}
+
+.detail-left .dot {
+    width: 10px;
+    height: 10px;
+    background: #ccc;
+    border-radius: 50%;
+    margin: 0 4px;
+    cursor: pointer
+}
+
+.detail-left .dot.active {
+    background: #000
+}
+
+.detail-right {
+    flex: 1;
+}
+
+.detail-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.detail-price {
+    color: #e4393c;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.detail-stock {
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.back-btn {
+    display: inline-block;
+    padding: 10px 22px;
+    background: #000;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: .3s
+}
+
+.back-btn:hover {
+    background: #444;
+}
+
+@media(max-width:767px) {
+    .detail-box {
+        flex-direction: column;
+    }
+}

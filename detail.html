@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>黑子优选 - 商品详情</title>
+
+    <!-- 复用你已有的样式文件，保证头部/配色/字体一致 -->
+    <link rel="stylesheet" href="style_20251028.css" />
+
+</head>
+
+<body>
+    <!-- ====== 通用头部（直接抄 index.html 的） ====== -->
+    <!-- 顶部导航 -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">黑子优选</div>
+            <!-- <div class="search-box">
+                <input type="text" placeholder="搜索商品、品牌、店铺">
+                <button>搜索</button>
+            </div>
+            <div class="nav-links" style="opacity: 0;">
+                <a href="#">登录</a>
+                <a href="#">注册</a>
+                <a href="#">购物车</a>
+                <a href="#">我的订单</a>
+            </div> -->
+        </div>
+    </header>
+
+    <!-- ====== 详情内容 ====== -->
+    <div class="detail-box">
+        <div class="detail-left">
+            <!-- 可视窗口 -->
+            <div class="slide-box">
+                <div class="slide-track" id="track">
+                    <!-- JS 动态插入 img -->
+                </div>
+                <button class="slide-btn prev" id="prev">‹</button>
+                <button class="slide-btn next" id="next">›</button>
+            </div>
+
+            <!-- 左右按钮 -->
+
+
+            <!-- 小圆点指示器 -->
+            <div class="dots" id="dots"></div>
+        </div>
+        <div class="detail-right">
+            <h2 id="d-title" class="detail-title">加载中…</h2>
+            <!-- <div id="d-price" class="detail-price"></div>
+            <div id="d-stock" class="detail-stock"></div> -->
+            <a class="back-btn" href="index.html">← 返回列表</a>
+        </div>
+    </div>
+
+    <!-- ====== 数据脚本 ====== -->
+    <script src="data.js"></script>
+    <script>
+        // 取 URL 参数
+        const params = new URLSearchParams(location.search);
+        const id = Number(params.get('id'));
+
+        const item = raw[id];
+
+        if (!item) {
+            document.querySelector('.detail-box').innerHTML = '<p>商品不存在</p>';
+        } else {
+            const [images, name] = item;
+            document.getElementById('d-title').textContent = name;
+            // document.getElementById('d-price').textContent = `¥${price}`;
+            // document.getElementById('d-stock').textContent = `库存 ${stock} 件`;
+        }
+
+
+        const images = item[0];
+
+        let idx = 0;
+        const total = images.length;
+        const track = document.getElementById('track');
+        const prev = document.getElementById('prev');
+        const next = document.getElementById('next');
+        const dots = document.getElementById('dots');
+
+        // 1. 初始化 DOM
+        track.innerHTML = images.map(src => `<img src="${src}" alt="">`).join('');
+        dots.innerHTML = images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('');
+
+        // 2. 切换函数
+        function goSlide(i) {
+            idx = (i + total) % total;
+            track.style.transform = `translateX(-${idx * 100}%)`;
+            document.querySelectorAll('.dot').forEach((d, k) => d.classList.toggle('active', k === idx));
+        }
+
+        // 3. 事件绑定
+        prev.onclick = () => goSlide(idx - 1);
+        next.onclick = () => goSlide(idx + 1);
+        dots.onclick = e => {
+            if (e.target.classList.contains('dot')) goSlide([...dots.children].indexOf(e.target));
+        };
+
+        // 4. 键盘左右箭头
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') prev.onclick();
+            if (e.key === 'ArrowRight') next.onclick();
+        });
+    </script>
+
+</body>
+
+</html>
