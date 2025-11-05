@@ -50,7 +50,7 @@
 
     /* 2-1 获取当前文件 SHA */
     const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
-      headers:{Authorization:'token ' + token}
+      headers:{Authorization:token}
     }).then(r=>r.json());
 
     /* 2-2 把新商品合并进去 */
@@ -74,6 +74,7 @@
   </script>
 </body>
 </html>
+
 
 
 
