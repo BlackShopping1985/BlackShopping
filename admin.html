@@ -8,8 +8,6 @@
   <h2>新增商品（纯前端版）</h2>
   <form id="form">
     名称：<input name="name" required><br>
-    价格：<input type="number" name="price" required><br>
-    库存：<input type="number" name="stock" required><br>
     图片（多图）：<input type="file" name="pics" multiple accept="image/*" required><br>
     <button type="submit">提交</button>
   </form>
@@ -33,10 +31,9 @@
     e.preventDefault();
     const f = e.target;
     const item = {
-      name: f.name.value,
-      price: Number(f.price.value),
-      stock: Number(f.stock.value),
-      pics: await Promise.all([...f.pics.files].map(toBase64))
+      pics: await Promise.all([...f.pics.files].map(toBase64)),
+      name: f.name.value 
+      
     };
 
     const token = prompt('GitHub Personal Access Token:'); // 简单做法，生产环境用加密存储
@@ -74,6 +71,7 @@
   </script>
 </body>
 </html>
+
 
 
 
