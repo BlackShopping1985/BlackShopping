@@ -16,6 +16,8 @@
   <pre id="log"></pre>
 
   <script>
+const token = prompt('GitHub Personal Access Token:');
+    
   /* 1. 把图片转 Base64（GitHub 静态页无法上传服务器，先转内联） */
   async function toBase64(file){
     return new Promise((resolve,reject)=>{
@@ -70,3 +72,4 @@
   </script>
 </body>
 </html>
+
