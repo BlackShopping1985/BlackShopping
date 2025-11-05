@@ -31,7 +31,7 @@
   document.getElementById('form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target;
-    console.log(e.name.value)
+    console.log(f.name.value)
     const item = {
       pics: await Promise.all([...f.pics.files].map(toBase64)),
       name: f.name.value      
@@ -72,6 +72,7 @@
   </script>
 </body>
 </html>
+
 
 
 
