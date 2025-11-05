@@ -1,0 +1,27 @@
+name: JSON to data.js
+
+on:
+  push:
+    paths: ['web/data.json']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 生成 data.js
+        run: |
+          node -e "
+          const fs=require('fs');
+          const list=JSON.parse(fs.readFileSync('web/data.json'));
+          const js='const raw='+JSON.stringify(list,null,2)+';\n';
+          fs.writeFileSync('web/data.js',js);
+          "
+
+      - name: 提交并推送
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add web/data.js
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: regenerate data.js" && git push)
