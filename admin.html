@@ -63,7 +63,7 @@
       content: btoa(JSON.stringify(list, null, 2)),
       sha: refRes.sha
     };
-    const pushRes = await fetch(`https://api.github.com/repos/ ${owner}/${repo}/contents/${path}`,{
+    const pushRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
       method:'PUT',
       body: JSON.stringify(body),
       headers:{Authorization:`token ${token}`, 'Content-Type':'application/json'}
@@ -74,6 +74,7 @@
   </script>
 </body>
 </html>
+
 
 
 
