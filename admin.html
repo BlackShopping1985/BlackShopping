@@ -16,7 +16,7 @@
   <pre id="log"></pre>
 
   <script>
-const token = prompt('GitHub Personal Access Token:');
+
     
   /* 1. 把图片转 Base64（GitHub 静态页无法上传服务器，先转内联） */
   async function toBase64(file){
@@ -39,7 +39,7 @@ const token = prompt('GitHub Personal Access Token:');
       pics: await Promise.all([...f.pics.files].map(toBase64))
     };
 
-    const token = prompt('GitHub Personal Access Token:'); // 简单做法，生产环境用加密存储
+    const token = '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'; // 简单做法，生产环境用加密存储
     if(!token){ alert('需要 Token'); return; }
 
     const owner = 'BlackShopping1985';
@@ -72,4 +72,5 @@ const token = prompt('GitHub Personal Access Token:');
   </script>
 </body>
 </html>
+
 
