@@ -12,11 +12,13 @@ jobs:
 
       - name: 生成 data.js
         run: |
+          # 如果 data.json 不存在或空，先写 []
+          [ ! -s web/data.json ] && echo '[]' > web/data.json
           node -e "
-          const fs=require('fs');
-          const list=JSON.parse(fs.readFileSync('web/data.json'));
-          const js='const raw='+JSON.stringify(list,null,2)+';\n';
-          fs.writeFileSync('web/data.js',js);
+          const fs = require('fs');
+          const list = JSON.parse(fs.readFileSync('web/data.json', 'utf8'));
+          const js = 'const raw = ' + JSON.stringify(list, null, 2) + ';\n';
+          fs.writeFileSync('web/data.js', js);
           "
 
       - name: 提交并推送
