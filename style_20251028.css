@@ -422,7 +422,7 @@ body {
 .adminPage .modal-footer button{margin-left:6px;padding:6px 12px;}
 .adminPage .product-edit{display:flex;gap:10px;align-items:center;margin-bottom:10px;border:1px solid #eee;padding:8px;border-radius:4px;}
 .adminPage .product-edit img{height:60px;}
-.adminPage .product-edit input[type=text]{flex:1;}
+.adminPage .product-edit input[type=text]{flex:.2;width: 200px;}
 .adminPage .pic-row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
 .adminPage .pic-item{position:relative;width:80px;height:80px;}
 .adminPage .pic-item img{width:100%;height:100%;object-fit:cover;border:1px solid #ddd;}
@@ -434,6 +434,7 @@ body {
 .adminPage .replace-btn:before{content:'↻';}
 .adminPage .del-pic-btn:before{content:'×';}
     
+
 
 
 
