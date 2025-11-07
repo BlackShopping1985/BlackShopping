@@ -57,7 +57,9 @@
 
     /* 2-3 推送回仓库 */
     function utoa(str) {
-      return btoa(unescape(encodeURIComponent(str)));
+      return btoa(
+        new TextEncoder().encode(str).reduce((a, b) => a + String.fromCharCode(b), '')
+      );
     }
     
     const body = {
@@ -76,6 +78,7 @@
   </script>
 </body>
 </html>
+
 
 
 
