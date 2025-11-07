@@ -17,6 +17,7 @@
     <form id="modalForm">
       <p>名称：<input name="name" required></p><br>
       <p>图片（多图）：<input type="file" name="pics" multiple accept="image/*" required></p><br>
+      <p>描述：<textarea name="desc" rows="3"></textarea></p><br>
       <div class="modal-footer">
         <button type="submit">保存</button>
         <button type="button" id="cancelBtn">取消</button>
@@ -87,6 +88,7 @@ function renderList() {
   box.innerHTML = list.map((it, idx) => `
     <div class="product-edit" data-idx="${idx}">
       <input type="text" class="edit-name" value="${it.name}">
+      <textarea class="edit-desc" rows="2">${it.desc||''}</textarea>
       <div class="pic-row">
         ${it.pics.map((src, pIdx) => `
           <div class="pic-item" data-pic-idx="${pIdx}">
@@ -129,8 +131,12 @@ modalForm.addEventListener('submit',async(e)=>{
       const r = new FileReader();
       r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
     });
-  }));
-  list.push({name:f.name.value,pics});
+  }));  
+  list.unshift({
+    name : f.name.value,
+    desc : f.desc.value,
+    pics : pics   // 文件 Base64 数组
+  });
   await save('chore: add product');
   modal.style.display='none'; modalForm.reset();
 });
@@ -146,6 +152,7 @@ document.getElementById('productList').addEventListener('click',async(e)=>{
   }
   if(e.target.classList.contains('save-btn')){
     const nameInput = row.querySelector('.edit-name');
+    const descInput = row.querySelector('.edit-desc');
     const fileInput = row.querySelector('.edit-pics');
     let pics = list[idx].pics;
     if(fileInput.files.length){
@@ -155,8 +162,8 @@ document.getElementById('productList').addEventListener('click',async(e)=>{
           r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
         });
       }));
-    }
-    list[idx]={name:nameInput.value,pics}; await save('chore: update product');
+    }    
+    list[idx] = {name:nameInput.value,desc :descInput.value,pics}; await save('chore: update product info');
   }
 });
 
@@ -248,6 +255,7 @@ document.getElementById('productList').addEventListener('click', async (e) => {
 </script>
 </body>
 </html>
+
 
 
 
