@@ -134,10 +134,18 @@
                 console.error('Error loading the product data:', error);
                 document.querySelector('.detail-box').innerHTML = '<p>抱歉，无法加载商品数据。请稍后再试。</p>';
             });
+        let startX = 0;
+        track.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+        track.addEventListener('touchend', e => {
+          const endX = e.changedTouches[0].clientX;
+          endX - startX > 50 && prev.onclick();   // 右滑上一张
+          startX - endX > 50 && next.onclick();   // 左滑下一张
+        });
     </script>
 
 </body>
 
 
 </html>
+
 
