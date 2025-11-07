@@ -173,7 +173,14 @@ document.getElementById('productList').addEventListener('click',async(e)=>{
     //     });
     //   }));
     // }    
-    list[idx] = {name:nameInput.value,desc :descInput.value}; await save('chore: update product info');
+    
+    list[idx] = {
+      ...list[idx],              // ① 保留原 pics / price / stock / 任何字段
+      name: nameInput.value,
+      desc: descInput.value
+    };
+    
+    await save('chore: update product info');
   }
 });
 
@@ -265,6 +272,7 @@ document.getElementById('productList').addEventListener('click', async (e) => {
 </script>
 </body>
 </html>
+
 
 
 
