@@ -173,7 +173,7 @@ document.getElementById('productList').addEventListener('click',async(e)=>{
         });
       }));
     }    
-    list[idx] = {name:nameInput.value,desc :descInput.value}; await save('chore: update product info');
+    list[idx] = {name:nameInput.value,desc :descInput.value,pics}; await save('chore: update product info');
   }
 });
 
@@ -265,6 +265,7 @@ document.getElementById('productList').addEventListener('click', async (e) => {
 </script>
 </body>
 </html>
+
 
 
 
