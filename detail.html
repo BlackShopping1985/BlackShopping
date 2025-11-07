@@ -57,95 +57,92 @@
     </div>
 
     <!-- ====== 数据脚本 ====== -->
-    <script>
-        // 取 URL 参数
-        const params = new URLSearchParams(location.search);
-        const id = Number(params.get('id')); // 获取商品 ID
+   <script>
+/* ==========  取 URL 参数  ========== */
+const params = new URLSearchParams(location.search);
+const id     = Number(params.get('id'));
 
-        // 使用 fetch 异步加载 web/data.json 文件
-        fetch('web/data.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(productList => { // 将变量名从 raw 改为 productList 更清晰
-                // JSON 数据加载成功后，执行原有的渲染逻辑
-                const item = productList[id];
+/* ==========  加载数据  ========== */
+fetch('web/data.json')
+  .then(r => {
+    if (!r.ok) throw new Error('Network response was not ok');
+    return r.json();
+  })
+  .then(productList => {
+    /* ---- 1. 先打印，再干活 ---- */
+    console.log('整包数据', productList);
+    console.log('当前id', id, '对应item', productList[id]);
 
-                if (!item) {
-                    document.querySelector('.detail-box').innerHTML = '<p>商品不存在或ID无效</p>';
-                    return; // 提前退出
-                }
-                
-                // *** 关键修改在这里：从对象属性中获取数据 ***
-                // 不再使用数组解构 [images, name]
-                const images = item.pics; // 从 item.pics 属性获取图片数组
-                const name = item.name;   // 从 item.name 属性获取名称
-                // 如果您还有价格和库存，可以这样获取：
-                // const price = item.price;
-                // const stock = item.stock;
-                
-                // 更新页面信息
-                document.getElementById('d-title').textContent = name;
-                // document.getElementById('d-price').textContent = `¥${price}`;
-                // document.getElementById('d-stock').textContent = `库存 ${stock} 件`;
+    /* ---- 2. 取当前商品 ---- */
+    const item = productList[id];
+    if (!item) {
+      document.querySelector('.detail-box').innerHTML = '<p>商品不存在或ID无效</p>';
+      return;
+    }
 
+    /* ---- 3. 保证 images 一定是数组 ---- */
+    const images = Array.isArray(item.pics)   ? item.pics
+                 : typeof item.pics === 'string' ? [item.pics]
+                 : [];                                // 兜底空数组
+    const name = item.name || '未命名商品';
 
-                // --- 滑动图片逻辑 ---
-                let idx = 0;
-                const total = images.length;
-                const track = document.getElementById('track');
-                const prev = document.getElementById('prev');
-                const next = document.getElementById('next');
-                const dots = document.getElementById('dots');
-                
-                // 确保DOM元素存在，如果加载失败，这些可能是null
-                if (!track || !prev || !next || !dots) return; 
+    /* ---- 4. 渲染标题 ---- */
+    document.getElementById('d-title').textContent = name;
 
-                // 1. 初始化 DOM
-                track.innerHTML = images.map(src => `<img src="${src}" alt="${name}">`).join('');
-                dots.innerHTML = images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('');
+    /* ---- 5. 轮播图逻辑 ---- */
+    let idx   = 0;
+    const total = images.length;
+    const track = document.getElementById('track');
+    const prev  = document.getElementById('prev');
+    const next  = document.getElementById('next');
+    const dots  = document.getElementById('dots');
 
-                // 2. 切换函数
-                function goSlide(i) {
-                    idx = (i + total) % total;
-                    track.style.transform = `translateX(-${idx * 100}%)`;
-                    document.querySelectorAll('.dot').forEach((d, k) => d.classList.toggle('active', k === idx));
-                }
+    if (!track || !prev || !next || !dots) return;   // DOM 缺失直接退
 
-                // 3. 事件绑定
-                prev.onclick = () => goSlide(idx - 1);
-                next.onclick = () => goSlide(idx + 1);
-                dots.onclick = e => {
-                    if (e.target.classList.contains('dot')) goSlide([...dots.children].indexOf(e.target));
-                };
+    // 5-1 插入图片 & 小圆点
+    track.innerHTML = images.map(src => `<img src="${src}" alt="${name}" loading="lazy">`).join('');
+    dots.innerHTML  = images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('');
 
-                // 4. 键盘左右箭头
-                document.addEventListener('keydown', e => {
-                    if (e.key === 'ArrowLeft') prev.onclick();
-                    if (e.key === 'ArrowRight') next.onclick();
-                });
+    // 5-2 切换函数
+    function goSlide(i) {
+      idx = (i + total) % total;
+      track.style.transform = `translateX(-${idx * 100}%)`;
+      document.querySelectorAll('.dot').forEach((d, k) => d.classList.toggle('active', k === idx));
+    }
 
-            })
-            .catch(error => {
-                // 处理加载失败的情况
-                console.error('Error loading the product data:', error);
-                document.querySelector('.detail-box').innerHTML = '<p>抱歉，无法加载商品数据。请稍后再试。</p>';
-            });
-        let startX = 0;
-        track.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-        track.addEventListener('touchend', e => {
-          const endX = e.changedTouches[0].clientX;
-          endX - startX > 50 && prev.onclick();   // 右滑上一张
-          startX - endX > 50 && next.onclick();   // 左滑下一张
-        });
-    </script>
+    // 5-3 事件绑定
+    prev.onclick = () => goSlide(idx - 1);
+    next.onclick = () => goSlide(idx + 1);
+    dots.onclick = e => {
+      if (e.target.classList.contains('dot')) goSlide([...dots.children].indexOf(e.target));
+    };
+
+    // 5-4 键盘
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  prev.onclick();
+      if (e.key === 'ArrowRight') next.onclick();
+    });
+
+    /* ---- 6. 手势滑动（放在 then 里才有 DOM） ---- */
+    let startX = 0;
+    track.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    track.addEventListener('touchend', e => {
+      const endX = e.changedTouches[0].clientX;
+      endX - startX > 50 && prev.onclick();
+      startX - endX > 50 && next.onclick();
+    });
+  })
+  .catch(error => {
+    console.error('Error loading the product data:', error);
+    document.querySelector('.detail-box').innerHTML =
+      '<p>抱歉，无法加载商品数据。请稍后再试。</p>';
+  });
+</script>
 
 </body>
 
 
 </html>
+
 
 
