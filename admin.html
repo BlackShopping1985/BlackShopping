@@ -163,16 +163,16 @@ document.getElementById('productList').addEventListener('click',async(e)=>{
   if(e.target.classList.contains('save-btn')){
     const nameInput = row.querySelector('.edit-name');
     const descInput = row.querySelector('.edit-desc');
-    // const fileInput = row.querySelector('.edit-pics');
-    // let pics = list[idx].pics;
-    // if(fileInput.files.length){
-    //   pics = await Promise.all([...fileInput.files].map(file=>{
-    //     return new Promise((resolve,reject)=>{
-    //       const r = new FileReader();
-    //       r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
-    //     });
-    //   }));
-    // }    
+    const fileInput = row.querySelector('.edit-pics');
+    let pics = list[idx].pics;
+    if(fileInput.files.length){
+      pics = await Promise.all([...fileInput.files].map(file=>{
+        return new Promise((resolve,reject)=>{
+          const r = new FileReader();
+          r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
+        });
+      }));
+    }    
     list[idx] = {name:nameInput.value,desc :descInput.value}; await save('chore: update product info');
   }
 });
@@ -265,6 +265,7 @@ document.getElementById('productList').addEventListener('click', async (e) => {
 </script>
 </body>
 </html>
+
 
 
 
