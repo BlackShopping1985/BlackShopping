@@ -71,8 +71,8 @@ fetch('web/data.json')
   })
   .then(productList => {
     /* ---- 1. 先打印，再干活 ---- */
-    console.log('整包数据', productList);
-    console.log('当前id', id, '对应item', productList[id]);
+    // console.log('整包数据', productList);
+    // console.log('当前id', id, '对应item', productList[id]);
 
     /* ---- 2. 取当前商品 ---- */
     const item = productList[id];
@@ -148,6 +148,7 @@ fetch('web/data.json')
 
 
 </html>
+
 
 
 
