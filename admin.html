@@ -78,17 +78,37 @@ async function loadProducts(){
 }
 
 /* ==========  渲染列表  ========== */
-function renderList(){
+/* ==========  渲染列表（已改造）  ========== */
+function renderList() {
   const box = document.getElementById('productList');
-  if(!list.length){ box.innerHTML='<p>暂无商品</p>'; return; }
-  box.innerHTML = list.map((it,idx)=>`
+  if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return; }
+
+  box.innerHTML = list.map((it, idx) => `
     <div class="product-edit" data-idx="${idx}">
-      <img src="${it.pics?.[0]||'img/placeholder.jpg'}" alt="">
+      <!-- 名称输入 -->
       <input type="text" class="edit-name" value="${it.name}">
-      <input type="file" class="edit-pics" multiple accept="image/*">
+      <!-- 全部图片 -->
+      <div class="pic-row">
+        ${it.pics.map((src, pIdx) => `
+          <div class="pic-item" data-pic-idx="${pIdx}">
+            <img src="${src}" alt="">
+            <div class="pic-hover">
+              <button type="button" class="replace-btn" title="替换"></button>
+              <button type="button" class="del-pic-btn" title="删除"></button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <!-- 整行按钮 -->
       <button class="save-btn">保存</button>
       <button class="del-btn">删除</button>
     </div>`).join('');
+
+  // 统一悬停显按钮（纯 CSS 也行，这里用 JS 方便后续事件）
+  document.querySelectorAll('.pic-item').forEach(item => {
+    item.addEventListener('mouseenter', () => item.classList.add('hover'));
+    item.addEventListener('mouseleave', () => item.classList.remove('hover'));
+  });
 }
 
 /* ==========  新增弹窗  ========== */
@@ -154,6 +174,49 @@ function log(txt){
 
 /* ==========  入口  ========== */
 loadProducts();
+
+
+
+/* ==========  单张图替换 / 删除  ========== */
+document.getElementById('productList').addEventListener('click', async (e) => {
+  const picItem = e.target.closest('.pic-item');
+  if (!picItem) return;
+  const row   = picItem.closest('.product-edit');
+  const idx   = +row.dataset.idx;
+  const pIdx  = +picItem.dataset.picIdx;
+
+  if (e.target.classList.contains('del-pic-btn')) {
+    if (!confirm('删除这张图片？')) return;
+    list[idx].pics.splice(pIdx, 1);          // 删掉这张
+    if (!list[idx].pics.length) list[idx].pics = ['img/placeholder.jpg']; // 保底
+    await save('chore: delete single pic');
+    return;
+  }
+
+  if (e.target.classList.contains('replace-btn')) {
+    // 生成隐藏 file input 并点击
+    let fileInp = picItem.querySelector('input[type=file]');
+    if (!fileInp) {
+      fileInp = document.createElement('input');
+      fileInp.type = 'file';
+      fileInp.accept = 'image/*';
+      fileInp.style.display = 'none';
+      picItem.appendChild(fileInp);
+    }
+    fileInp.onchange = async () => {
+      if (!fileInp.files[0]) return;
+      const newBase64 = await new Promise(r => {
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInp.files[0]);
+        reader.onload = () => r(reader.result);
+      });
+      list[idx].pics[pIdx] = newBase64;   // 原地替换
+      await save('chore: replace single pic');
+    };
+    fileInp.click();
+  }
+});  
 </script>
 </body>
 </html>
+
