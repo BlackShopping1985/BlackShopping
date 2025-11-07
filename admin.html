@@ -3,29 +3,29 @@
 <head>
   <meta charset="utf-8">
   <title>后台-管理商品</title>
-  <link rel="stylesheet" type="text/css" href="style_20251028.css">
-  <style>
-    /* 简单后台样式，可自行扩充 */
-    .admin-section{border:1px solid #ccc;padding:15px;margin:15px 0;border-radius:6px;}
-    .product-edit{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
-    .product-edit img{height:60px;}
-    .product-edit input[type=text]{flex:1;}
-    .product-edit button{margin-left:6px;}
-  </style>
+  <link rel="stylesheet" type="text/css" href="style_20251028.css">  
 </head>
-<body>
-<h2>新增 / 编辑商品</h2>
+<body class="adminPage">
 
-<!-- ===== 新增区域（你原来表单） ===== -->
-<div class="admin-section">
-  <form id="addForm">
-    名称：<input name="name" required><br>
-    图片（多图）：<input type="file" name="pics" multiple accept="image/*" required><br>
-    <button type="submit">提交</button>
-  </form>
+<h2>商品管理</h2>
+<button id="addBtn" class="add-product-btn">+ 新增商品</button>
+
+<!-- ===== 弹窗（新增） ===== -->
+<div id="addModal" class="modal-mask">
+  <div class="modal-box">
+    <h3>新增商品</h3>
+    <form id="modalForm">
+      名称：<input name="name" required><br>
+      图片（多图）：<input type="file" name="pics" multiple accept="image/*" required><br>
+      <div class="modal-footer">
+        <button type="submit">保存</button>
+        <button type="button" id="cancelBtn">取消</button>
+      </div>
+    </form>
+  </div>
 </div>
 
-<!-- ===== 现有商品列表 ===== -->
+<!-- ===== 现有商品 ===== -->
 <div class="admin-section">
   <h3>现有商品</h3>
   <div id="productList">加载中…</div>
@@ -42,15 +42,14 @@ function atou(base64) {
   return new TextDecoder().decode(Uint8Array.from(atob(base64),c=>c.charCodeAt(0)));
 }
 
-/* ==========  配置 ========== */
+/* ==========  配置  ========== */
 const owner = 'BlackShopping1985';
 const repo  = 'BlackShopping';
 const path  = 'web/data.json';
+let token   = '';
+let list    = [];
 
-let token   = '';          // 复用弹窗输入
-let list    = [];          // 当前内存数据
-
-/* ==========  一次性“读-改-推” ========== */
+/* ==========  一次性“读-改-推”  ========== */
 async function pushToGitHub(content, msg){
   const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
     {headers:{Authorization:`token ${token}`}}).then(r=>r.json());
@@ -62,41 +61,46 @@ async function pushToGitHub(content, msg){
   }).then(r=>r.json());
 }
 
-/* ==========  初始加载 ========== */
+/* ==========  初始加载  ========== */
 async function loadProducts(){
   token = localStorage.getItem('gh_token') || '';
   if(!token){
-    token = prompt('GitHub Personal Access Token（保存到 localStorage）');
+    token = prompt('GitHub Personal Access Token（将保存到 localStorage）');
     if(!token){ alert('需要 Token'); return; }
     localStorage.setItem('gh_token',token);
   }
-
   try{
     const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
       {headers:{Authorization:`token ${token}`}}).then(r=>r.json());
     list = refRes.content ? JSON.parse(atou(refRes.content)) : [];
     renderList();
-  }catch(e){
-    log(e.message||'加载失败');
-  }
+  }catch(e){ log(e.message||'加载失败'); }
 }
 
-/* ==========  渲染列表 ========== */
+/* ==========  渲染列表  ========== */
 function renderList(){
   const box = document.getElementById('productList');
   if(!list.length){ box.innerHTML='<p>暂无商品</p>'; return; }
   box.innerHTML = list.map((it,idx)=>`
     <div class="product-edit" data-idx="${idx}">
       <img src="${it.pics?.[0]||'img/placeholder.jpg'}" alt="">
-      <input type="text" value="${it.name}" class="edit-name">
+      <input type="text" class="edit-name" value="${it.name}">
       <input type="file" class="edit-pics" multiple accept="image/*">
       <button class="save-btn">保存</button>
       <button class="del-btn">删除</button>
     </div>`).join('');
 }
 
-/* ==========  新增商品 ========== */
-document.getElementById('addForm').addEventListener('submit', async (e)=>{
+/* ==========  新增弹窗  ========== */
+const addBtn = document.getElementById('addBtn');
+const modal= document.getElementById('addModal');
+const modalForm = document.getElementById('modalForm');
+const cancelBtn = document.getElementById('cancelBtn');
+
+addBtn.addEventListener('click',()=>modal.style.display='flex');
+cancelBtn.addEventListener('click',()=>{modal.style.display='none';modalForm.reset();});
+
+modalForm.addEventListener('submit',async(e)=>{
   e.preventDefault();
   const f = e.target;
   const pics = await Promise.all([...f.pics.files].map(file=>{
@@ -105,29 +109,25 @@ document.getElementById('addForm').addEventListener('submit', async (e)=>{
       r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
     });
   }));
-  list.push({name:f.name.value, pics});
+  list.push({name:f.name.value,pics});
   await save('chore: add product');
-  f.reset();
+  modal.style.display='none'; modalForm.reset();
 });
 
-/* ==========  编辑 / 删除 ========== */
-document.getElementById('productList').addEventListener('click', async (e)=>{
+/* ==========  编辑 / 删除  ========== */
+document.getElementById('productList').addEventListener('click',async(e)=>{
   const row = e.target.closest('.product-edit');
-  if(!row) return;
+  if(!row)return;
   const idx = +row.dataset.idx;
-
   if(e.target.classList.contains('del-btn')){
-    if(!confirm('确定删除？')) return;
-    list.splice(idx,1);
-    await save('chore: delete product');
-    return;
+    if(!confirm('确定删除？'))return;
+    list.splice(idx,1); await save('chore: delete product'); return;
   }
-
   if(e.target.classList.contains('save-btn')){
     const nameInput = row.querySelector('.edit-name');
     const fileInput = row.querySelector('.edit-pics');
-    let pics = list[idx].pics;                 // 原图
-    if(fileInput.files.length){                // 有选新图才重新转
+    let pics = list[idx].pics;
+    if(fileInput.files.length){
       pics = await Promise.all([...fileInput.files].map(file=>{
         return new Promise((resolve,reject)=>{
           const r = new FileReader();
@@ -135,15 +135,14 @@ document.getElementById('productList').addEventListener('click', async (e)=>{
         });
       }));
     }
-    list[idx] = {name:nameInput.value, pics};
-    await save('chore: update product');
+    list[idx]={name:nameInput.value,pics}; await save('chore: update product');
   }
 });
 
-/* ==========  统一保存 ========== */
+/* ==========  统一保存  ========== */
 async function save(msg){
   try{
-    const res = await pushToGitHub(JSON.stringify(list,null,2), msg);
+    const res = await pushToGitHub(JSON.stringify(list,null,2),msg);
     log(res.content?'✅ 保存成功':'❌ 保存失败');
     renderList();
   }catch(e){ log(e.message||'保存失败'); }
@@ -153,9 +152,8 @@ function log(txt){
   document.getElementById('log').textContent = typeof txt==='string'?txt:JSON.stringify(txt,null,2);
 }
 
-/* ==========  页面入口 ========== */
+/* ==========  入口  ========== */
 loadProducts();
 </script>
 </body>
 </html>
-
