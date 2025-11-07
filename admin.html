@@ -2,139 +2,159 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <title>后台-新增商品</title>
-  <link rel="stylesheet" type="text/css" href="style_20251028.css"> 
+  <title>后台-管理商品</title>
+  <link rel="stylesheet" type="text/css" href="style_20251028.css">
+  <style>
+    /* 简单后台样式，可自行扩充 */
+    .admin-section{border:1px solid #ccc;padding:15px;margin:15px 0;border-radius:6px;}
+    .product-edit{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+    .product-edit img{height:60px;}
+    .product-edit input[type=text]{flex:1;}
+    .product-edit button{margin-left:6px;}
+  </style>
 </head>
 <body>
-  <h2>新增商品（纯前端版）</h2>
-  <form id="form">
-    
-    名称：<input name="name" required><br> 
+<h2>新增 / 编辑商品</h2>
+
+<!-- ===== 新增区域（你原来表单） ===== -->
+<div class="admin-section">
+  <form id="addForm">
+    名称：<input name="name" required><br>
     图片（多图）：<input type="file" name="pics" multiple accept="image/*" required><br>
     <button type="submit">提交</button>
   </form>
-  <pre id="log"></pre>
+</div>
+
+<!-- ===== 现有商品列表 ===== -->
+<div class="admin-section">
+  <h3>现有商品</h3>
+  <div id="productList">加载中…</div>
+</div>
+
+<pre id="log"></pre>
 
 <script>
-
-/* ==========  工具：UTF-8 → Base64 ========== */
+/* ==========  工具：UTF-8 ↔ Base64  ========== */
 function utoa(str) {
-  return btoa(
-    new TextEncoder().encode(str).reduce((a, b) => a + String.fromCharCode(b), '')
-  );
+  return btoa(new TextEncoder().encode(str).reduce((a,b)=>a+String.fromCharCode(b),''));
+}
+function atou(base64) {
+  return new TextDecoder().decode(Uint8Array.from(atob(base64),c=>c.charCodeAt(0)));
 }
 
-/* ==========  工具：一次性“读-改-推” ========== */
-async function pushToGitHub(owner, repo, path, token, newContent, message) {
-  // ① 拿最新 SHA
-  const refRes = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-    { headers: { Authorization: `token ${token}` } }
-  ).then(r => r.json());
+/* ==========  配置 ========== */
+const owner = 'BlackShopping1985';
+const repo  = 'BlackShopping';
+const path  = 'web/data.json';
 
-  if (refRes.message) throw new Error(refRes.message);   // 404/403 等
+let token   = '';          // 复用弹窗输入
+let list    = [];          // 当前内存数据
 
-  // ② 推送
-  const body = {
-    message,
-    content: utoa(newContent),
-    sha: refRes.sha
-  };
-
-  return fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-    {
-      method: 'PUT',
-      body: JSON.stringify(body),
-      headers: {
-        Authorization: `token ${token}`,
-        'Content-Type': 'application/json'
-      }
-    }
-  ).then(r => r.json());
+/* ==========  一次性“读-改-推” ========== */
+async function pushToGitHub(content, msg){
+  const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+    {headers:{Authorization:`token ${token}`}}).then(r=>r.json());
+  if(refRes.message) throw new Error(refRes.message);
+  return fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
+    method:'PUT',
+    body:JSON.stringify({message:msg, content:utoa(content), sha:refRes.sha}),
+    headers:{Authorization:`token ${token}`,'Content-Type':'application/json'}
+  }).then(r=>r.json());
 }
 
-/* ==========  提交事件 ========== */
-document.getElementById('form').addEventListener('submit', async (e) => {
+/* ==========  初始加载 ========== */
+async function loadProducts(){
+  token = localStorage.getItem('gh_token') || '';
+  if(!token){
+    token = prompt('GitHub Personal Access Token（保存到 localStorage）');
+    if(!token){ alert('需要 Token'); return; }
+    localStorage.setItem('gh_token',token);
+  }
+
+  try{
+    const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      {headers:{Authorization:`token ${token}`}}).then(r=>r.json());
+    list = refRes.content ? JSON.parse(atou(refRes.content)) : [];
+    renderList();
+  }catch(e){
+    log(e.message||'加载失败');
+  }
+}
+
+/* ==========  渲染列表 ========== */
+function renderList(){
+  const box = document.getElementById('productList');
+  if(!list.length){ box.innerHTML='<p>暂无商品</p>'; return; }
+  box.innerHTML = list.map((it,idx)=>`
+    <div class="product-edit" data-idx="${idx}">
+      <img src="${it.pics?.[0]||'img/placeholder.jpg'}" alt="">
+      <input type="text" value="${it.name}" class="edit-name">
+      <input type="file" class="edit-pics" multiple accept="image/*">
+      <button class="save-btn">保存</button>
+      <button class="del-btn">删除</button>
+    </div>`).join('');
+}
+
+/* ==========  新增商品 ========== */
+document.getElementById('addForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-
   const f = e.target;
+  const pics = await Promise.all([...f.pics.files].map(file=>{
+    return new Promise((resolve,reject)=>{
+      const r = new FileReader();
+      r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
+    });
+  }));
+  list.push({name:f.name.value, pics});
+  await save('chore: add product');
+  f.reset();
+});
 
-  /* 1. 构造新商品 */
-  const item = {
-    name: f.name.value,
-    pics: await Promise.all([...f.pics.files].map(file => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = err => reject(err);
-      });
-    }))
-  };
+/* ==========  编辑 / 删除 ========== */
+document.getElementById('productList').addEventListener('click', async (e)=>{
+  const row = e.target.closest('.product-edit');
+  if(!row) return;
+  const idx = +row.dataset.idx;
 
-  /* 2. 输入 Token */
-  const token = prompt('GitHub Personal Access Token：');
-  if (!token) { alert('需要 Token'); return; }
+  if(e.target.classList.contains('del-btn')){
+    if(!confirm('确定删除？')) return;
+    list.splice(idx,1);
+    await save('chore: delete product');
+    return;
+  }
 
-  /* 3. 仓库信息 */
-  const owner = 'BlackShopping1985';
-  const repo  = 'BlackShopping';
-  const path  = 'web/data.json';
-
-  try {
-    /* 4. 先读最新数据 */
-    const refRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-      { headers: { Authorization: `token ${token}` } }
-    ).then(r => r.json());
-
-    if (refRes.message) throw new Error(refRes.message);
-
-    const list = refRes.content ? JSON.parse(atou(refRes.content)) : [];
-    list.push(item);
-
-    /* 5. 一次性推送 */
-    const pushRes = await pushToGitHub(
-      owner,
-      repo,
-      path,
-      token,
-      JSON.stringify(list, null, 2),
-      'chore: add product from admin'
-    );
-
-    document.getElementById('log').textContent = pushRes.content
-      ? '✅ 已提交，大概 30 秒后生效'
-      : JSON.stringify(pushRes, null, 2);
-  } catch (err) {
-    alert('提交失败：' + err.message);
-    console.error(err);
+  if(e.target.classList.contains('save-btn')){
+    const nameInput = row.querySelector('.edit-name');
+    const fileInput = row.querySelector('.edit-pics');
+    let pics = list[idx].pics;                 // 原图
+    if(fileInput.files.length){                // 有选新图才重新转
+      pics = await Promise.all([...fileInput.files].map(file=>{
+        return new Promise((resolve,reject)=>{
+          const r = new FileReader();
+          r.readAsDataURL(file); r.onload=()=>resolve(r.result); r.onerror=reject;
+        });
+      }));
+    }
+    list[idx] = {name:nameInput.value, pics};
+    await save('chore: update product');
   }
 });
 
-/* ==========  工具：Base64 → UTF-8（读仓库时用） ========== */
-function atou(base64) {
-  return new TextDecoder().decode(
-    Uint8Array.from(atob(base64), c => c.charCodeAt(0))
-  );
+/* ==========  统一保存 ========== */
+async save(msg){
+  try{
+    const res = await pushToGitHub(JSON.stringify(list,null,2), msg);
+    log(res.content?'✅ 保存成功':'❌ 保存失败');
+    renderList();
+  }catch(e){ log(e.message||'保存失败'); }
 }
-</script>
 
+function log(txt){
+  document.getElementById('log').textContent = typeof txt==='string'?txt:JSON.stringify(txt,null,2);
+}
+
+/* ==========  页面入口 ========== */
+loadProducts();
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
