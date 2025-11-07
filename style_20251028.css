@@ -423,7 +423,18 @@ body {
 .adminPage .product-edit{display:flex;gap:10px;align-items:center;margin-bottom:10px;border:1px solid #eee;padding:8px;border-radius:4px;}
 .adminPage .product-edit img{height:60px;}
 .adminPage .product-edit input[type=text]{flex:1;}
+.adminPage .pic-row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+.adminPage .pic-item{position:relative;width:80px;height:80px;}
+.adminPage .pic-item img{width:100%;height:100%;object-fit:cover;border:1px solid #ddd;}
+.adminPage .pic-hover{position:absolute;inset:0;background:rgba(0,0,0,.45);
+           display:none;align-items:center;justify-content:center;gap:4px;}
+.adminPage .pic-item.hover .pic-hover{display:flex;}
+.adminPage .replace-btn,.del-pic-btn{width:24px;height:24px;border:none;border-radius:50%;
+                          background:#fff;color:#111;font-size:14px;cursor:pointer;}
+.adminPage .replace-btn:before{content:'↻';}
+.adminPage .del-pic-btn:before{content:'×';}
     
+
 
 
 
