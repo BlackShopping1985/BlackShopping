@@ -378,10 +378,14 @@ body {
     margin-bottom: 10px;
 }
 .detail-desc {
-    color: #e4393c;
+    color: #666;
     font-size: 28px;
     font-weight: bold;
     margin-bottom: 15px;
+    width: 345px;
+    height: 285px;
+    ord-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .detail-price {
@@ -442,6 +446,7 @@ body {
 .adminPage .del-pic-btn:before{content:'×';}
 .adminPage .add-more-pic{border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;}
 .adminPage .add-pic-btn{width:100%;height:100%;border:none;background:transparent;font-size:24px;cursor:pointer;}   
+
 
 
 
