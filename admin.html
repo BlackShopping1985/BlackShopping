@@ -15,69 +15,114 @@
   <pre id="log"></pre>
 
   <script>
+<script>
+/* ==========  工具：UTF-8 → Base64 ========== */
+function utoa(str) {
+  return btoa(
+    new TextEncoder().encode(str).reduce((a, b) => a + String.fromCharCode(b), '')
+  );
+}
 
-    
-  /* 1. 把图片转 Base64（GitHub 静态页无法上传服务器，先转内联） */
-  async function toBase64(file){
-    return new Promise((resolve,reject)=>{
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = err => reject(err);
-    });
-  }
+/* ==========  工具：一次性“读-改-推” ========== */
+async function pushToGitHub(owner, repo, path, token, newContent, message) {
+  // ① 拿最新 SHA
+  const refRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+    { headers: { Authorization: `token ${token}` } }
+  ).then(r => r.json());
 
-  /* 2. 提交：读 data.json → 加新项 → 推回仓库 */
-  document.getElementById('form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const f = e.target;
-    console.log(f.name.value)
-    const item = {
-      pics: await Promise.all([...f.pics.files].map(toBase64)),
-      name: f.name.value      
-    };
+  if (refRes.message) throw new Error(refRes.message);   // 404/403 等
 
-    const token = prompt('GitHub Personal Access Token:'); // 简单做法，生产环境用加密存储
-    if(!token){ alert('需要 Token'); return; }
+  // ② 推送
+  const body = {
+    message,
+    content: utoa(newContent),
+    sha: refRes.sha
+  };
 
-    console.log(token)
+  return fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers: {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  ).then(r => r.json());
+}
 
-    const owner = 'BlackShopping1985';
-    const repo  = 'BlackShopping';
-    const path  = 'web/data.json';
+/* ==========  提交事件 ========== */
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    /* 2-1 获取当前文件 SHA */
-    const refRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
-      headers:{Authorization:token}
-    }).then(r=>r.json());
+  const f = e.target;
 
-    /* 2-2 把新商品合并进去 */
-    const list = refRes.content ? JSON.parse(atob(refRes.content)) : [];
+  /* 1. 构造新商品 */
+  const item = {
+    name: f.name.value,
+    pics: await Promise.all([...f.pics.files].map(file => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = err => reject(err);
+      });
+    }))
+  };
+
+  /* 2. 输入 Token */
+  const token = prompt('GitHub Personal Access Token：');
+  if (!token) { alert('需要 Token'); return; }
+
+  /* 3. 仓库信息 */
+  const owner = 'BlackShopping1985';
+  const repo  = 'BlackShopping';
+  const path  = 'web/data.json';
+
+  try {
+    /* 4. 先读最新数据 */
+    const refRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      { headers: { Authorization: `token ${token}` } }
+    ).then(r => r.json());
+
+    if (refRes.message) throw new Error(refRes.message);
+
+    const list = refRes.content ? JSON.parse(atou(refRes.content)) : [];
     list.push(item);
 
-    /* 2-3 推送回仓库 */
-    function utoa(str) {
-      return btoa(
-        new TextEncoder().encode(str).reduce((a, b) => a + String.fromCharCode(b), '')
-      );
-    }
-    
-    const body = {
-      message: 'chore: add product from admin',
-      content: utoa(JSON.stringify(list, null, 2)),
-      sha: refRes.sha
-    };
-    const pushRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
-      method:'PUT',
-      body: JSON.stringify(body),
-      headers:{Authorization:`token ${token}`, 'Content-Type':'application/json'}
-    }).then(r=>r.json());
+    /* 5. 一次性推送 */
+    const pushRes = await pushToGitHub(
+      owner,
+      repo,
+      path,
+      token,
+      JSON.stringify(list, null, 2),
+      'chore: add product from admin'
+    );
 
-    document.getElementById('log').textContent = pushRes.content ? '✅ 已提交，大概 30 秒后生效' : JSON.stringify(pushRes, null, 2);
-  });
+    document.getElementById('log').textContent = pushRes.content
+      ? '✅ 已提交，大概 30 秒后生效'
+      : JSON.stringify(pushRes, null, 2);
+  } catch (err) {
+    alert('提交失败：' + err.message);
+    console.error(err);
+  }
+});
+
+/* ==========  工具：Base64 → UTF-8（读仓库时用） ========== */
+function atou(base64) {
+  return new TextDecoder().decode(
+    Uint8Array.from(atob(base64), c => c.charCodeAt(0))
+  );
+}
+</script>
   </script>
 </body>
 </html>
+
 
 
 
