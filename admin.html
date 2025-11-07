@@ -56,9 +56,13 @@
     list.push(item);
 
     /* 2-3 推送回仓库 */
+    function utoa(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+    
     const body = {
-      message:'chore: add product from admin',
-      content: window.btoa(JSON.stringify(list, null, 2)),
+      message: 'chore: add product from admin',
+      content: utoa(JSON.stringify(list, null, 2)),
       sha: refRes.sha
     };
     const pushRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{
@@ -72,6 +76,7 @@
   </script>
 </body>
 </html>
+
 
 
 
