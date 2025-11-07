@@ -79,15 +79,14 @@ async function loadProducts(){
 
 /* ==========  渲染列表  ========== */
 /* ==========  渲染列表（已改造）  ========== */
+/* ==========  渲染列表（已带「+ 新增图片」）  ========== */
 function renderList() {
   const box = document.getElementById('productList');
   if (!list.length) { box.innerHTML = '<p>暂无商品</p>'; return; }
 
   box.innerHTML = list.map((it, idx) => `
     <div class="product-edit" data-idx="${idx}">
-      <!-- 名称输入 -->
       <input type="text" class="edit-name" value="${it.name}">
-      <!-- 全部图片 -->
       <div class="pic-row">
         ${it.pics.map((src, pIdx) => `
           <div class="pic-item" data-pic-idx="${pIdx}">
@@ -98,19 +97,21 @@ function renderList() {
             </div>
           </div>
         `).join('')}
+        <!--  ✅ + 新增图片  -->
+        <div class="pic-item add-more-pic" data-idx="${idx}">
+          <button type="button" class="add-pic-btn">+</button>
+        </div>
       </div>
-      <!-- 整行按钮 -->
       <button class="save-btn">保存</button>
       <button class="del-btn">删除</button>
     </div>`).join('');
 
-  // 统一悬停显按钮（纯 CSS 也行，这里用 JS 方便后续事件）
+  // 悬停显按钮
   document.querySelectorAll('.pic-item').forEach(item => {
     item.addEventListener('mouseenter', () => item.classList.add('hover'));
     item.addEventListener('mouseleave', () => item.classList.remove('hover'));
   });
 }
-
 /* ==========  新增弹窗  ========== */
 const addBtn = document.getElementById('addBtn');
 const modal= document.getElementById('addModal');
@@ -216,7 +217,36 @@ document.getElementById('productList').addEventListener('click', async (e) => {
     fileInp.click();
   }
 });  
+
+/* ==========  追加新图片（放在最后）  ========== */
+document.getElementById('productList').addEventListener('click', async (e) => {
+  const addBtn = e.target.closest('.add-pic-btn');
+  if (!addBtn) return;
+  const row  = addBtn.closest('.product-edit');
+  const idx  = +row.dataset.idx;
+
+  // 创建隐藏 input 并点击
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.style.display = 'none';
+  inp.onchange = async () => {
+    if (!inp.files[0]) return;
+    const base64 = await new Promise(r => {
+      const reader = new FileReader();
+      reader.readAsDataURL(inp.files[0]);
+      reader.onload = () => r(reader.result);
+    });
+    list[idx].pics.push(base64);   // 追加到尾部
+    await save('chore: append pic');
+  };
+  document.body.appendChild(inp);
+  inp.click();
+  inp.remove();
+});  
+  
 </script>
 </body>
 </html>
+
 
