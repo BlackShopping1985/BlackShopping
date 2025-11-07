@@ -50,6 +50,7 @@
         </div>
         <div class="detail-right">
             <h2 id="d-title" class="detail-title">加载中…</h2>
+            <div id="d-desc" class="detail-desc"></div>
             <!-- <div id="d-price" class="detail-price"></div>
             <div id="d-stock" class="detail-stock"></div> -->
             <a class="back-btn" href="index.html">← 返回列表</a>
@@ -85,9 +86,13 @@ fetch('web/data.json')
                  : typeof item.pics === 'string' ? [item.pics]
                  : [];                                // 兜底空数组
     const name = item.name || '未命名商品';
+    const desc = item.desc || '---';
 
     /* ---- 4. 渲染标题 ---- */
     document.getElementById('d-title').textContent = name;
+
+    /* ---- 4. 渲染描訴 ---- */ 
+    document.getElementById('d-desc').textContent = desc;
 
     /* ---- 5. 轮播图逻辑 ---- */
     let idx   = 0;
@@ -143,6 +148,7 @@ fetch('web/data.json')
 
 
 </html>
+
 
 
 
