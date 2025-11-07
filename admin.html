@@ -17,7 +17,7 @@
     <form id="modalForm">
       <p>名称：<input name="name" required></p><br>
       <p>图片（多图）：<input type="file" name="pics" multiple accept="image/*" required></p><br>
-      <div style="width: 365px;height: 200px;display: flex;">描述：<textarea name="desc" rows="3" style="width: 310px;height: 200px;"></textarea></div><br>
+      <div style="width: 365px;height: 200px;display: flex;" class="desc">描述：<textarea name="desc" rows="3" ></textarea></div><br>
       <div class="modal-footer">
         <button type="submit">保存</button>
         <button type="button" id="cancelBtn">取消</button>
@@ -98,7 +98,7 @@ function renderList() {
   box.innerHTML = list.map((it, idx) => `
     <div class="product-edit" data-idx="${idx}">
       <input type="text" class="edit-name" value="${it.name}">
-      <textarea class="edit-desc" rows="2">${it.desc||''}</textarea>
+      <textarea class="edit-desc" rows="2" >${it.desc||''}</textarea>
       <div class="pic-row">
         ${it.pics.map((src, pIdx) => `
           <div class="pic-item" data-pic-idx="${pIdx}">
@@ -265,6 +265,7 @@ document.getElementById('productList').addEventListener('click', async (e) => {
 </script>
 </body>
 </html>
+
 
 
 
