@@ -141,7 +141,7 @@ document.getElementById('productList').addEventListener('click', async (e)=>{
 });
 
 /* ==========  统一保存 ========== */
-async save(msg){
+async function save(msg){
   try{
     const res = await pushToGitHub(JSON.stringify(list,null,2), msg);
     log(res.content?'✅ 保存成功':'❌ 保存失败');
@@ -158,3 +158,4 @@ loadProducts();
 </script>
 </body>
 </html>
+
